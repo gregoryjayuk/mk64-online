@@ -58,6 +58,6 @@ private:
     Behaviour _bhv;
     int8_t _toggle;
     int8_t *_toggleVisibility;
-    Vec3f _oldPos;
+    Vec3f _oldPos = { 0, 0, 0 };
     bool _isMod = false;
 };

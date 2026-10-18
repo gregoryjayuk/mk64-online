@@ -124,7 +124,7 @@ float4 mod(float4 a, float4 b) {
 #define TEX_OFFSET(tex, texSmplr, texCoord, off, texSize) tex.sample(texSmplr, texCoord - off / texSize)
 
 @if(o_three_point_filtering)
-    float4 filter3point(thread const texture2d<float> tex, thread const sampler texSmplr, thread const float2& texCoord, thread const float2& texSize) {
+    float4 filter3point(texture2d<float> tex, sampler texSmplr, thread const float2& texCoord, thread const float2& texSize) {
         float2 offset = fract((texCoord * texSize) - float2(0.5));
         offset -= float2(step(1.0, offset.x + offset.y));
         float4 c0 = TEX_OFFSET(tex, texSmplr, texCoord, offset, texSize);
@@ -133,11 +133,11 @@ float4 mod(float4 a, float4 b) {
         return c0 + abs(offset.x) * (c1 - c0) + abs(offset.y) * (c2 - c0);
     }
 
-    float4 hookTexture2D(thread const texture2d<float> tex, thread const sampler texSmplr, thread const float2& uv, thread const float2& texSize) {
+    float4 hookTexture2D(texture2d<float> tex, sampler texSmplr, thread const float2& uv, thread const float2& texSize) {
         return filter3point(tex, texSmplr, uv, texSize);
     }
 @else
-    float4 hookTexture2D(thread const texture2d<float> tex, thread const sampler texSmplr, thread const float2& uv, thread const float2& texSize) {
+    float4 hookTexture2D(texture2d<float> tex, sampler texSmplr, thread const float2& uv, thread const float2& texSize) {
         return tex.sample(texSmplr, uv);
     }
 @end

@@ -1,5 +1,5 @@
 if(MSVC)
-  target_compile_options(${PROJECT_NAME} PRIVATE /fp:fast)
+  target_compile_options(${PROJECT_NAME} PRIVATE /fp:precise) # online play: see the GCC/Clang note below
 
   if("${CMAKE_VS_PLATFORM_NAME}" STREQUAL "x64")
     target_compile_options(${PROJECT_NAME} PRIVATE
@@ -36,7 +36,11 @@ else()
     -Wno-missing-field-initializers
     -Wno-parentheses
     -Wno-missing-braces
-    -ffast-math
+    # Online play needs every machine to compute bit-identical results, Mac and Linux, ARM and x86 alike:
+    # strict IEEE floating point (no fast-math, no fused multiply-add contraction) and one char signedness.
+    -fno-fast-math
+    -ffp-contract=off
+    -fsigned-char
     -flto=auto
     -pipe)
   target_link_options(${PROJECT_NAME} PRIVATE -flto=auto)

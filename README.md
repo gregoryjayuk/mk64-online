@@ -1,3 +1,45 @@
+## Online play (this fork)
+
+This is a fork of [HarbourMasters/SpaghettiKart](https://github.com/HarbourMasters/SpaghettiKart) that adds online play for two players on two computers. Each player sees their own kart full screen, the way a one-player game looks, while both machines run the same race frame by frame: same karts, same items, same everything. Grand Prix, VS and Battle all work. Everything below this section is upstream's README; all credit for the port itself goes to its maintainers.
+
+![The host's lobby with a room code to give the other player](docs/screenshots/online-lobby.png)
+
+![The start of an online race, seen by player 2 full screen, with the connection overlay in the top-left corner](docs/screenshots/online-race-start.jpg)
+
+![Player 2's own view on the grid; player 1 sees their own kart on their own machine](docs/screenshots/online-own-view.jpg)
+
+### What it adds
+
+- **Lockstep netcode.** Only controller input crosses the network (4 bytes per player per frame). The input delay is chosen from the measured round trip, inputs are sent redundantly so a lost packet does not stall the game, and a per-frame state hash warns if the two games ever diverge.
+- **Room codes.** The host gets an 8-character code such as `K7QM-2XRD`; the other player types it in. The code is exchanged through a topic on the public [ntfy.sh](https://ntfy.sh) service, public STUN servers (Google, Cloudflare) find each side's public address, and UDP hole punching connects the two machines directly. There is no game server.
+- **Fallbacks.** On the same network you can type the host's LAN address instead of a code. A copy-paste connection code works when ntfy.sh is unreachable. For networks that block direct connections there is a small UDP relay you can run yourself on any machine with a public UDP port (`tools/netplay/relay/relay.cpp`); enter its `host:port` under **Online → Play Online → Advanced: relay server**. No relay is configured by default.
+- **Your own view.** Every machine simulates the full split-screen game, but the renderer stretches the local player's region over the whole window, and you hear your own camera's sound.
+- **An overlay** showing who you are playing, the round trip, the input delay, pauses, waits and any out-of-sync warning.
+- **Determinism fixes** that make two machines compute identical races: strict IEEE floating point and signed `char` (so a Mac and a Linux build of the same commit can play each other), zeroed uninitialised actor and object fields, a fixed-pattern heap during online sessions, and music cues that no longer cut the cameras.
+- **A macOS 27 fix** for the Metal shader compile failure.
+
+### Hosting and joining
+
+Both players need a build of the same commit (the game refuses to connect different builds) and their own US Mario Kart 64 ROM; nothing from the ROM is in this repository.
+
+1. **Host:** press **Esc**, go to **Online → Play Online**, type your name and click **Host a game**. The game restarts into the online lobby and shows a room code.
+2. **Other player:** press **Esc**, go to **Online → Play Online**, type your name, enter the room code under **Join** and click **Join**. Connecting usually takes two or three seconds.
+3. Both games then start together from power-on, like one console with two controllers. The host is player 1 and drives the menus: choose **2P GAME**, then Grand Prix, VS or Battle. Each player picks their character with their own controller.
+
+The full guide, including what each error message means, is [docs/HOW-TO-PLAY-ONLINE.md](docs/HOW-TO-PLAY-ONLINE.md).
+
+### Building
+
+- Build the `netplay` branch exactly as upstream describes in [docs/BUILDING.md](docs/BUILDING.md). Clone with submodules: `git clone --recursive -b netplay https://github.com/gregoryjayuk/mk64-online.git`.
+- The `libultraship` submodule points to a fork ([gregoryjayuk/libultraship](https://github.com/gregoryjayuk/libultraship), branch `mk64-online-netplay`) that adds the renderer's focus region, an in-memory save for online sessions, the Metal shader fix and an optional window snapshot for tests.
+- The online build id is stamped at build time from the last commit that touched code, so both players should build the same commit from a clean tree.
+- macOS: `tools/netplay/package-mac.sh` turns a Release build into a zip another Mac can open (no Nintendo data inside). Linux: `tools/netplay/linux/` holds a launcher for a packaged build.
+- `tools/netplay/localtest.py` runs two copies of the game against each other on one machine, driven by a test bot, and compares their per-frame state hashes.
+
+Tested between two copies on one Mac (Apple Silicon, Metal) and between a Mac and an x86-64 Linux PC (gcc, OpenGL) through races, battles and results with no desyncs. Windows is not built or tested yet. Two players only. Why it is built this way: [docs/DECISIONS.md](docs/DECISIONS.md); known issues: [docs/ISSUES.md](docs/ISSUES.md); ideas: [docs/IMPROVEMENTS.md](docs/IMPROVEMENTS.md); history: [docs/CHANGELOG.md](docs/CHANGELOG.md). Licensing follows upstream SpaghettiKart.
+
+---
+
 ![Spaghetti Kart](docs/spaghettigithublight.png#gh-light-mode-only)
 ![Spaghetti Kart](docs/spaghettigithubnight.png#gh-dark-mode-only)
 

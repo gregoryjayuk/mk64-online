@@ -9,6 +9,7 @@
 #include "racing/framebuffer_effects.h"
 
 #include "profiler.h"
+#include "port/netplay/NetplayGame.h"
 #include "main.h"
 #include "racing/memory.h"
 #include "menus.h"
@@ -395,6 +396,7 @@ void read_controllers(void) {
     osContStartReadData(&gSIEventMesgQueue);
     // osRecvMesg(&gSIEventMesgQueue, &msg, OS_MESG_BLOCK);
     osContGetReadData(gControllerPads);
+    Netplay_ExchangeControllerPads(gControllerPads);
     update_controller(0);
     update_controller(1);
     update_controller(2);
@@ -1156,6 +1158,7 @@ void thread5_game_loop(void) {
 }
 
 void thread5_iteration(void) {
+    Netplay_OnFrameStart();
     func_800CB2C4();
     calculate_delta_time();
 #ifdef TARGET_N64
@@ -1163,7 +1166,7 @@ void thread5_iteration(void) {
         func_800CB2C4();
     }
 #endif
-    if (GfxDebuggerIsDebugging()) {
+    if (GfxDebuggerIsDebugging() && !Netplay_IsSessionMode()) {
         Graphics_PushFrame(gGfxPool->gfxPool);
         return;
     }
@@ -1181,6 +1184,7 @@ void thread5_iteration(void) {
 
     // call_render_hook();
 
+    Netplay_UpdateRenderFocus();
     end_master_display_list();
     display_and_vsync();
 }

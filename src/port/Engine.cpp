@@ -1,4 +1,5 @@
 #include "Engine.h"
+#include "port/netplay/NetplayGame.h"
 
 #include <cstdlib>
 #include "ship/utils/StringHelper.h"
@@ -345,7 +346,11 @@ int GameEngine::ShowYesNoBox(const char* title, const char* box) {
     boxData.message = box;
     boxData.title = title;
     boxData.buttons = buttons;
-    SDL_ShowMessageBox(&boxData, &ret);
+    if (SDL_ShowMessageBox(&boxData, &ret) != 0) {
+        // No dialog possible (e.g. Wayland without zenity): log the question and take the default answer, Yes.
+        SPDLOG_WARN("{}: {} (no dialog available, answering Yes)", title, box);
+        ret = IDYES;
+    }
 #endif
     return ret;
 }
@@ -381,7 +386,10 @@ void GameEngine::StartFrame() const {
 
     switch (dwScancode) {
         case KbScancode::LUS_KB_TAB: {
-            // Toggle HD Assets
+            // Toggle HD Assets. Not online: collision is built from the same display lists.
+            if (Netplay_IsSessionMode()) {
+                break;
+            }
             CVarSetInteger("gEnhancements.Mods.AlternateAssets", !CVarGetInteger("gEnhancements.Mods.AlternateAssets", 0));
             break;
         }

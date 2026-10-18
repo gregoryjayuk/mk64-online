@@ -39,7 +39,7 @@ class ATrain : public AActor {
     uint32_t PathIndex = 0;
     uint32_t PathPoint = 0;
     TenderStatus HasTender = TenderStatus::NO_TENDER;
-    s32 SomeFlags;
+    s32 SomeFlags = 0;
     f32 SomeMultiplier;
 
     size_t Index; // Spawns the train in halves of the train path

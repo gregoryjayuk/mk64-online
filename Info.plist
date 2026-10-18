@@ -37,6 +37,8 @@
     <string>10.15</string>
     <key>NSHighResolutionCapable</key>
     <true/>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>Online play connects straight to your friend's game when you are on the same network.</string>
     <key>NSSupportsAutomaticGraphicsSwitching</key>
     <true/>
     <key>LSArchitecturePriority</key>

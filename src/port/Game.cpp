@@ -3,6 +3,8 @@
 
 #include "Game.h"
 #include "port/Engine.h"
+#include "port/netplay/NetplayGame.h"
+#include "port/netplay/NetplayUI.h"
 
 #include <fast/Fast3dWindow.h>
 #include <memory>
@@ -984,7 +986,9 @@ static void ApplyPendingReset() {
 }
 
 void push_frame() {
-    ApplyPendingReset();
+    if (!Netplay_IsSessionMode()) {
+        ApplyPendingReset();
+    }
     GameEngine::StartAudioFrame();
     GameEngine::Instance->StartFrame();
     thread5_iteration();
@@ -1050,11 +1054,26 @@ extern "C"
     setenv("SHIP_HOME", "~/Library/Application Support/SpaghettiKart", 0);
 #endif
     // load_wasm();
+    bool online = NetplayGame_ParseArgs(argc, argv);
     GameEngine::Create();
     audio_init();
     sound_init();
 
     CustomEngineInit();
+#if defined(__APPLE__) && !defined(PLATFORM_IOS)
+    // The Metal window is sized in screen points, half a Retina display's pixels. Unless the player chose a value,
+    // render at 2x so a MacBook gets every physical pixel.
+    if (CVarGetFloat("gInternalResolution", -1.0f) < 0.0f) {
+        CVarSetFloat("gInternalResolution", 2.0f);
+        Ship::Context::GetRawInstance()->GetWindow()->SetResolutionMultiplier(2.0f);
+    }
+#endif
+    NetplayUI_Init();
+    NetplayGame_TestRelaunchHook();
+    // Online play connects before the first frame: both machines then run every frame from power-on together.
+    if (online) {
+        NetplayGame_RunLobby();
+    }
 
     switch(CVarGetInteger("gSkipIntro", 0)) {
         case 0:
@@ -1082,6 +1101,7 @@ extern "C"
         push_frame();
     }
     CustomEngineDestroy();
+    NetplayGame_Shutdown();
     // GameEngine::Instance->ProcessFrame(push_frame);
     GameEngine::Instance->Destroy();
     // Everything user-visible (config, saves) is persisted by Destroy(). Skip the

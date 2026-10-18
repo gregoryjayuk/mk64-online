@@ -127,6 +127,17 @@ if(SPAGHETTIKART_IOS)
 endif()
 
 add_executable(${PROJECT_NAME} ${ALL_FILES})
+
+# Online play only pairs machines built from the same code. Floating point is strict (cmake/SetFlags.cmake), so a
+# Mac and a Linux build of one commit may play each other; the per-frame state hash catches any divergence.
+# The id is stamped at build time (every build), so a new commit needs no reconfigure.
+add_custom_target(NetplayBuildId
+  COMMAND ${CMAKE_COMMAND} -DSRC=${CMAKE_SOURCE_DIR} -DOUT=${CMAKE_BINARY_DIR}/netplay_build_id.h
+          -P ${CMAKE_SOURCE_DIR}/cmake/NetplayBuildId.cmake
+  BYPRODUCTS ${CMAKE_BINARY_DIR}/netplay_build_id.h
+  VERBATIM)
+add_dependencies(${PROJECT_NAME} NetplayBuildId)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR})
 target_include_directories(
   ${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
                           ${CMAKE_CURRENT_SOURCE_DIR}/include

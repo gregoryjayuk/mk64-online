@@ -21,7 +21,7 @@ public:
 
     Vec3f Position;
     s32 OnTriggered = 0;
-    u32 Timer;
+    u32 Timer = 0;
     u32 WaypointMin;
     u32 WaypointMax;
 

@@ -30,7 +30,7 @@ class ABoat : public AActor {
     s16 ActorIndex;
     f32 Speed;
     s16 RotY = 0;
-    s32 SomeFlags;
+    s32 SomeFlags = 0;
 
     int32_t SmokeParticles[128];
     int32_t NextParticlePtr = 0;

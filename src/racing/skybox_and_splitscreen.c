@@ -1,3 +1,4 @@
+#include "port/netplay/NetplayGame.h"
 #include <libultraship.h>
 #include <macros.h>
 #include <libultra/gbi.h>
@@ -263,7 +264,7 @@ void select_framebuffer(void) {
 
 void func_802A4300(void) {
 
-    if (gActiveScreenMode == SCREEN_MODE_1P) {
+    if (gActiveScreenMode == SCREEN_MODE_1P || Netplay_FocusActive()) {
         return;
     }
     if (D_800DC5B0 != 0) {
@@ -593,7 +594,20 @@ void race_begin_viewport_4p(ScreenContext* screen) {
     func_802A39E0(screen);
 }
 
+static void render_screens_impl(ScreenContext* screen, s32 mode, s32 someId, s32 playerId);
+
 void render_screens(ScreenContext* screen, s32 mode, s32 someId, s32 playerId) {
+    // Online play shows this machine's player full-window (the renderer stretches its region), so its projection
+    // uses the full-screen aspect. Render-only: gScreenAspect feeds nothing but projection matrices.
+    f32 savedAspect = gScreenAspect;
+    if (Netplay_IsFocusScreen(screen - gScreenContexts)) {
+        gScreenAspect = 1.33333334f;
+    }
+    render_screens_impl(screen, mode, someId, playerId);
+    gScreenAspect = savedAspect;
+}
+
+static void render_screens_impl(ScreenContext* screen, s32 mode, s32 someId, s32 playerId) {
     Camera* camera = screen->camera;
     s32 screenId = screen - gScreenContexts;
 

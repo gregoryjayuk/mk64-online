@@ -133,3 +133,7 @@ _packages/
 out/
 
 compile_commands.json
+
+# mk64-online netplay: local test runs and packaged builds
+runs/
+dist/

@@ -13,8 +13,8 @@ extern "C" {
 
 class OObject {
 public:
-    uint8_t uuid[16];
-    Object o;
+    uint8_t uuid[16] = {};
+    Object o = {};
     const char* Name = "";
     const char* ResourceName = "";
     bool bPendingDestroy = false;

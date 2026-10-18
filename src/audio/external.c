@@ -1,3 +1,4 @@
+#include "port/netplay/NetplayGame.h"
 #include <libultraship.h>
 #include <common_structs.h>
 #include <macros.h>
@@ -245,7 +246,8 @@ s8 func_800C16E8(f32 arg0, f32 arg1, u8 cameraId) {
     f32 var_f20;
     f32 var_f2;
 
-    if (D_800EA1C0 == 0) {
+    // Online each machine hears one camera, its own player's, so it pans like a one-player game.
+    if (D_800EA1C0 == 0 || Netplay_AudioListener() >= 0) {
         if (D_800EA0F4 != 0) {
             var_f2 = 10.0f;
             var_f14 = 20.0f;
@@ -361,6 +363,10 @@ void func_800C19D0(u8 arg0, u8 arg1, u8 arg2) {
             sp3B = func_800C15D0(arg0, arg1, arg2);
             sp34 = func_800C1934(arg0, arg1) * *temp_s0->unk10;
             sp33 = func_800C16E8(*temp_s0->unk00[0], *temp_s0->unk08, temp_s0->cameraId);
+            // Online: sounds heard from the other player's camera belong to the other machine.
+            if (Netplay_AudioListener() >= 0 && temp_s0->cameraId != Netplay_AudioListener()) {
+                sp3C = 0.0f;
+            }
             
             // Set surround effect index when in surround mode
             if (gAudioLibSoundMode == SOUND_MODE_SURROUND) {
@@ -551,6 +557,12 @@ void func_800C2274(u8 player) {
     u8 temp_s0;
     u8 why = 0xFF;
     s32 var_a2;
+
+    // These music cues cut the cameras (title demo, finish cinematics). The music runs on the audio thread, so
+    // when a cue lands depends on each machine's sound card; online, the cameras must not follow it.
+    if (Netplay_IsSessionMode()) {
+        return;
+    }
 
     var_a2 = 0xF;
     if (gSequencePlayers[player].enabled != 0) {
